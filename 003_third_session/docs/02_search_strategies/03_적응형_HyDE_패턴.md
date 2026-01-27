@@ -84,7 +84,8 @@ from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from textwarp import dedent
 
-_PROMPT = dedent(
+HYDE_PROMPT = PromptTemplate(
+    dedent(
     f"""
     You are generating a hypothetical document to improve retrieval.
     Write a concise document that would directly answer the user's question.
@@ -96,11 +97,10 @@ _PROMPT = dedent(
     Output plain text only.
     Question: {{question}}
     Style hint: {{style_hint}}
-    """
-).strip()
-_HYDE_PROMPT = PromptTemplate(_PROMPT)
+    """.strip()
+)
 
-_JUDGE_PROMPT = PromptTemplate(
+JUDGE_PROMPT = PromptTemplate(
     dedent(
         f"""
         You are a sufficiency judge for retrieval results.
@@ -134,7 +134,7 @@ def node_judge(state: dict) -> dict:
     docs = state.get("docs", [])
     summary = " / ".join([str(d) for d in docs])[:1000]
     llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
-    result = (_JUDGE_PROMPT | llm | StrOutputParser()).invoke(
+    result = (JUDGE_PROMPT | llm | StrOutputParser()).invoke(
         {"question": question, "summary": summary}
     )
     use_hyde = not result.strip().upper().startswith("PASS")
@@ -147,7 +147,7 @@ def node_hyde(state: dict, store: Any) -> dict:
     docs = state.get("docs", [])
     style_hint = str(docs[0])[:300] if docs else "일반 가이드 문서 형식"
     llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
-    hyde_doc = (_HYDE_PROMPT | llm).invoke(
+    hyde_doc = (HYDE_PROMPT | llm).invoke(
         {"question": question, "style_hint": style_hint}
     ).content
     emb = OpenAIEmbeddings(model="text-embedding-3-small")
