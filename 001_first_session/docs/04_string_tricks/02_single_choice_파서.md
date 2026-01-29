@@ -35,7 +35,6 @@ LLM은 기준이 모호하면 서로 다른 범주를 섞어 출력합니다. �
 목적: 사용자 입력을 단일 선택 라벨로 분류한다.
 설명: 안전 분류 기준과 우선순위를 명시한다.
 디자인 패턴: 모듈 싱글턴
-참조: docs/04_string_tricks/02_single_choice_파서.md
 """
 
 from langchain_core.prompts import PromptTemplate

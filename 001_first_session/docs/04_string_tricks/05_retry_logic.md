@@ -51,7 +51,6 @@ LLM은 종종 다음과 같은 실패를 냅니다.
 목적: 이전 응답을 기대 형식으로 재작성하도록 지시한다.
 설명: 새로운 정보 추가를 금지하고 형식만 복구한다.
 디자인 패턴: 모듈 싱글턴
-참조: docs/04_string_tricks/05_retry_logic.md
 """
 
 from langchain_core.prompts import PromptTemplate

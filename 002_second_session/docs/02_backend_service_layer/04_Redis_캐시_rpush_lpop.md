@@ -176,3 +176,21 @@ def stream_loop(redis_client, key: str) -> None:
 - 폴링/백오프 정책이 있는가?
 - TTL/정리 정책이 있는가?
 - 순서 보장(`seq`)이 가능한가?
+
+---
+
+## 10. 코드 연결(프로젝트 기준)
+
+- 작업 큐: `src/secondsession/core/common/queue/chat_job_queue.py`
+- 이벤트 큐: `src/secondsession/core/common/queue/chat_stream_event_queue.py`
+- 워커 실행: `src/secondsession/core/worker/chat_worker.py`
+- 스트리밍 소비자: `src/secondsession/api/chat/service/chat_service.py`
+
+---
+
+## 11. 실습 최소 순서(권장)
+
+1) `ChatJobQueue.enqueue/dequeue`에서 JSON 직렬화 규칙을 확정한다.  
+2) `ChatStreamEventQueue.push_event/pop_event`에 job_id 키 규칙을 적용한다.  
+3) 이벤트가 없을 때 **짧은 폴링**을 적용한다.  
+4) `done` 이벤트 수신 시 스트리밍을 종료한다.

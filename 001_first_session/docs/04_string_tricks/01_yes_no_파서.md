@@ -31,7 +31,6 @@ YES/NO는 간단해 보이지만, LLM은 다음과 같은 변형을 자주 출�
 목적: YES/NO만 출력하도록 프롬프트를 구성한다.
 설명: 모델이 다른 표현을 쓰지 않도록 제약을 강화한다.
 디자인 패턴: 모듈 싱글턴
-참조: docs/04_string_tricks/01_yes_no_파서.md
 """
 
 from langchain_core.prompts import PromptTemplate

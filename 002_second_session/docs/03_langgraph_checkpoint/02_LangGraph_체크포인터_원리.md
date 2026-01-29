@@ -233,3 +233,21 @@ app.invoke({"query": "되돌린 상태에서 이어서 질문"}, config=rollback
 - thread_id와 checkpoint_id가 일관되게 관리되는가?
 - 복구 시나리오가 테스트 가능한가?
 - 정리 정책이 문서화되어 있는가?
+
+---
+
+## 10. 코드 연결(프로젝트 기준)
+
+- 체크포인터 팩토리: `src/secondsession/core/common/checkpointer/redis_checkpointer.py`
+- 비동기 체크포인터 구현: `src/secondsession/core/common/checkpointer/redis_async_checkpointer.py`
+- 그래프 컴파일: `src/secondsession/core/chat/graphs/chat_graph.py`
+- 워커 실행(config 전달): `src/secondsession/core/worker/chat_worker.py`
+
+---
+
+## 11. 실습 최소 순서(권장)
+
+1) `ChatWorker`에서 `configurable.thread_id`를 반드시 전달한다.  
+2) 필요 시 `checkpoint_id`로 되돌리는 복구 옵션을 추가한다.  
+3) 체크포인트 메타데이터에 `node/route/error_code`를 기록한다.  
+4) 동기/비동기 체크포인터 전환을 쉽게 하도록 팩토리 함수를 사용한다.

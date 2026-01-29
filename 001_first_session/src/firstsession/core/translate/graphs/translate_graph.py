@@ -37,6 +37,10 @@ class TranslateGraph:
 
         # TODO: START 노드에서 시작하는 흐름을 명시한다.
         # - START -> NormalizeInputNode
+        # TODO: 노드 등록 방식은 두 가지 모두 가능하다.
+        # - 함수형: graph.add_node("normalize", normalize_input)
+        # - 클래스형: graph.add_node("normalize", self.normalize_input_node.run)
+        #   - 클래스형은 무상태로 설계하고, 공유 데이터는 state에만 기록한다.
         # TODO: 다음 노드들을 추가하고 엣지를 연결한다.
         # - NormalizeInputNode: 입력 정규화
         # - SafeguardClassifyNode: PASS/PII/HARMFUL/PROMPT_INJECTION 판정
