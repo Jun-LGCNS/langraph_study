@@ -85,7 +85,7 @@ CREATE EXTENSION vector;
 - `src/thirdsession/api/rag/model/job_stream_response.py`
   - 스트리밍 이벤트 타입별 필드 규칙 확정
 
-### 1-1) 잡/스트리밍 아키텍처 확장(설계서 기준)
+### 1-1) 잡/스트리밍 아키텍처 확장
 
 - `nextStep.md`에 정의된 002 스타일 **잡/스트리밍 구조**를 003에 이식
 - 큐/워커/체크포인터/상태 복구/이벤트 규격 구현
@@ -105,7 +105,7 @@ CREATE EXTENSION vector;
   - 리트리버/벡터 스토어 주입 구조 확장
   - 프롬프트/후처리/생성 단계 분리
 
-### 3) 검색/벡터 검색 로직(노드 내부 구현)
+### 3) 검색/벡터 검색 로직
 
 - 검색 관련 로직은 `nodes` 내부에서 구현한다.
 - 대상 노드: `async_search_node.py`, `merge_node.py`, `hyde_node.py` (5번 참고)
@@ -149,9 +149,9 @@ CREATE EXTENSION vector;
 - `src/thirdsession/core/rag/prompts/answer_prompt.py`
   - 답변 생성 프롬프트 정의
 
-### 7) 후처리 구성(노드 내부 구현)
+### 7) 후처리 구성
 
-- 후처리는 `postprocess_node.py` 내부에서 구현한다. (5번 참고)
+- 후처리는 `postprocess_node.py` 내부에서 구현한다.
 
 ### 8) 에러/안전 정책 상수 정비
 
