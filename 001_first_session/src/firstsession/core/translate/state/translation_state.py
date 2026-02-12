@@ -19,4 +19,5 @@ class TranslationState(TypedDict):
     translated_text: str
     qc_passed: str
     retry_count: int
+    max_retry_count: int
     error: str

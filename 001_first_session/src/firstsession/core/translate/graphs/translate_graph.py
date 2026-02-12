@@ -5,17 +5,26 @@
 
 """번역 그래프 구성 모듈."""
 
-from langgraph.graph import END, StateGraph
+from langgraph.graph import START, END, StateGraph
 
 from firstsession.core.translate.state.translation_state import TranslationState
-
+from firstsession.core.translate.nodes.normalize_input_node import NormalizeInputNode
+from firstsession.core.translate.nodes.safeguard_classify_node import SafeguardClassifyNode
+from firstsession.core.translate.nodes.safeguard_decision_node import SafeguardDecisionNode
+from firstsession.core.translate.nodes.safeguard_fail_response_node import SafeguardFailResponseNode
+from firstsession.core.translate.nodes.translate_node import TranslateNode
+from firstsession.core.translate.nodes.quality_check_node import QualityCheckNode
+from firstsession.core.translate.nodes.retry_gate_node import RetryGateNode
+from firstsession.core.translate.nodes.retry_translate_node import RetryTranslateNode
+from firstsession.core.translate.nodes.response_node import ResponseNode
 
 class TranslateGraph:
     """번역 그래프 실행기."""
 
     def __init__(self) -> None:
         """그래프를 초기화한다."""
-        raise NotImplementedError("번역 그래프 초기화 로직을 구현해야 합니다.")
+        graph = self._build_graph()
+        self._app = graph.compile()
 
     def run(self, state: TranslationState) -> TranslationState:
         """번역 그래프를 실행한다.
@@ -26,6 +35,7 @@ class TranslateGraph:
         Returns:
             TranslationState: 번역 결과 상태.
         """
+        return self._app.invoke(state)
         raise NotImplementedError("번역 그래프 실행 로직을 구현해야 합니다.")
 
     def _build_graph(self) -> StateGraph:
@@ -34,6 +44,89 @@ class TranslateGraph:
         Returns:
             StateGraph: 구성된 그래프.
         """
+        graph: StateGraph = StateGraph(TranslationState)
+
+        # --- 노드 인스턴스(무상태) ---
+        normalize = NormalizeInputNode()
+        safeguard_classify = SafeguardClassifyNode()
+        safeguard_decision = SafeguardDecisionNode()
+        safeguard_fail = SafeguardFailResponseNode()
+        translate = TranslateNode()
+        quality_check = QualityCheckNode()
+        retry_gate = RetryGateNode()
+        retry_translate = RetryTranslateNode()
+        response = ResponseNode()
+
+        graph.add_node("normalize", normalize.run)
+        graph.add_node("safeguard_classify", safeguard_classify.run)
+        graph.add_node("safeguard_decision", safeguard_decision.run)
+        graph.add_node("safeguard_fail", safeguard_fail.run)
+        graph.add_node("translate", translate.run)
+        graph.add_node("quality_check", quality_check.run)
+        graph.add_node("retry_gate", retry_gate.run)
+        graph.add_node("retry_translate", retry_translate.run)
+        graph.add_node("response", response.run)
+
+        graph.add_edge(START, "normalize")
+        graph.add_edge("normalize", "safeguard_classify")
+        graph.add_edge("safeguard_classify", "safeguard_decision")
+
+        def _get(state, key, default=None):
+            if isinstance(state, dict):
+                return state.get(key, default)
+            return getattr(state, key, default)
+
+        def route_after_safeguard(state: TranslationState) -> str:
+            label = (_get(state, "safeguard_label") or "PASS").strip()
+            return "translate" if label == "PASS" else "safeguard_fail"
+
+        def route_after_retry_gate(state: TranslationState) -> str:
+            qc = (_get(state, "qc_passed") or "NO").strip().upper()
+
+            if qc == "YES":
+                return "response"
+
+            retry_count = int(_get(state, "retry_count", 0) or 0)
+            max_retry_count = int(_get(state, "max_retry_count", 0) or 0)
+
+            # 기본값 방어(0이면 RetryGateNode에서 1로 넣지만, 라우팅 함수도 안전하게)
+            if max_retry_count <= 0:
+                max_retry_count = 1
+
+            if retry_count < max_retry_count:
+                return "retry_translate"
+            return "response"
+
+
+        graph.add_conditional_edges(
+            "safeguard_decision",
+            route_after_safeguard,
+            {
+                "translate": "translate",
+                "safeguard_fail": "safeguard_fail",
+            },
+        )
+
+        graph.add_edge("safeguard_fail", "response")
+        graph.add_edge("response", END)
+
+        graph.add_edge("translate", "quality_check")
+        graph.add_edge("quality_check", "retry_gate")
+
+        graph.add_conditional_edges(
+            "retry_gate",
+            route_after_retry_gate,
+            {
+                "retry_translate": "retry_translate",
+                "response": "response",
+            },
+        )
+
+        graph.add_edge("retry_translate", "quality_check")
+
+        return graph
+
+
 
         # TODO: START 노드에서 시작하는 흐름을 명시한다.
         # - START -> NormalizeInputNode
